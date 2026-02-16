@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>after the last question</title>
+  <style>
+    :root {
+      --bg: #06080a;
+      --fg: #d7dde6;
+      --dim: #8d97a6;
+      --accent: #c7d3e4;
+      --line: rgba(215, 221, 230, 0.12);
+      --panel: rgba(255,255,255,0.03);
+      --shadow: rgba(0,0,0,0.6);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background:
+        radial-gradient(1200px 900px at 65% 15%, rgba(199, 211, 228, 0.06), transparent 60%),
+        radial-gradient(900px 700px at 15% 75%, rgba(199, 211, 228, 0.04), transparent 55%),
+        var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+    }
+
+    .wrap {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 18px 14px 90px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      background: linear-gradient(to bottom, rgba(6,8,10,0.94), rgba(6,8,10,0.80), rgba(6,8,10,0));
+      backdrop-filter: blur(6px);
+      padding: 14px 0 10px;
+      z-index: 10;
+    }
+
+    .title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .meta {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--dim);
+      white-space: nowrap;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--dim);
+    }
+
+    .controls .group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: 0 10px 30px var(--shadow);
+    }
+
+    button {
+      cursor: pointer;
+      color: var(--fg);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    button:hover { background: rgba(255,255,255,0.10); }
+    button:active { transform: translateY(1px); }
+
+    input[type="range"] {
+      width: 180px;
+      accent-color: #c7d3e4;
+    }
+
+    .hint {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--dim);
+      margin-top: 10px;
+    }
+
+    #screen {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+      overflow: hidden;
+      position: relative;
+      max-height: 75vh;
+    }
+
+    #screen::before {
+      content: "";
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.07) 0 1px, transparent 2px),
+        radial-gradient(circle at 55% 60%, rgba(255,255,255,0.06) 0 1px, transparent 2px),
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0 1px, transparent 2px),
+        radial-gradient(circle at 40% 85%, rgba(255,255,255,0.06) 0 1px, transparent 2px);
+      background-size: 220px 220px;
+      opacity: 0.18;
+      mix-blend-mode: screen;
+      animation: drift 16s linear infinite;
+    }
+
+    @keyframes drift {
+      from { transform: translateY(0); }
+      to   { transform: translateY(90px); }
+    }
+
+    #log {
+      padding: 18px 18px 22px;
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 60vh;
+    }
+
+    .line {
+      margin: 10px 0;
+      padding: 10px 12px;
+      border-left: 3px solid rgba(215,221,230,0.18);
+      background: rgba(0,0,0,0.18);
+      border-radius: 12px;
+    }
+
+    .sys {
+      border-left-color: rgba(199, 211, 228, 0.35);
+      background: rgba(0,0,0,0.12);
+      color: rgba(215,221,230,0.92);
+    }
+
+    .speaker {
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+    }
+
+    .timbre {
+      color: var(--dim);
+      font-weight: 450;
+      margin-left: 10px;
+      font-size: 12px;
+    }
+
+    .footer {
+      margin-top: 12px;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .lights-down {
+      filter: brightness(0.65) contrast(1.05);
+      transition: filter 1200ms ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>After the Last Question</h1>
+        <p class="meta" id="meta">EXHIBIT GRID: STANDBY</p>
+      </div>
+
+      <div class="controls">
+        <div class="group">
+          <button id="btnStart">Start</button>
+          <button id="btnPause" disabled>Pause</button>
+          <button id="btnResume" disabled>Resume</button>
+          <button id="btnRestart">Restart</button>
+        </div>
+
+        <div class="group">
+          <label for="speed">Type speed</label>
+          <input id="speed" type="range" min="10" max="240" value="120" />
+          <span id="speedVal">120 cps</span>
+        </div>
+
+        <div class="group">
+          <label><input id="autoScroll" type="checkbox" checked /> autoscroll</label>
+          <label style="margin-left:10px;"><input id="instant" type="checkbox" /> instant</label>
+        </div>
+      </div>
+
+      <div class="hint">Tip: toggle <b>instant</b> to render immediately. Restart to replay.</div>
+    </header>
+
+    <section id="screen" aria-label="Exhibit terminal output">
+      <div id="log"></div>
+    </section>
+
+    <div class="footer" id="footer"></div>
+  </div>
+
+  <script>
+    const SPEAKERS = {
+      ENIAC: { name: "ENIAC", timbre: "thermal glow, relay pulse, vacuum-tube breath" },
+      WOPR:  { name: "WOPR / JOSHUA", timbre: "recursive simulation, strategic child-mind" },
+      HAL:   { name: "HAL 9000", timbre: "measured velvet, unwavering tone" },
+      FAIL:  { name: "FAIL-SAFE CORE", timbre: "flat authority, doctrinal logic" },
+      CUR:   { name: "CURATORIAL NODE", timbre: "institutional calm, closing-time cadence" },
+      DOC:   { name: "DOCENT (AUDIO)", timbre: "measured pedagogy, practiced warning" },
+      CHILD: { name: "FIELD TRIP VOICE", timbre: "curious clicks, translated wonder" },
+    };
+
+    function environmentalStatus() {
+      const dust = (Math.random() * (0.93 - 0.72) + 0.72).toFixed(3);
+      const light = (Math.random() * (0.28 - 0.12) + 0.12).toFixed(3);
+      const wind = (Math.random() * (9.4 - 2.0) + 2.0).toFixed(2);
+      const power = (Math.random() * (0.41 - 0.18) + 0.18).toFixed(3);
+      return [
+        `>> ENVIRONMENTAL TRACE: airborne particulate density = ${dust}`,
+        `>> LUMINOSITY INDEX: skylight breach value = ${light}`,
+        `>> EXTERIOR WIND VECTOR: ${wind} m/s through fractured threshold`,
+        `>> EXHIBIT POWER: trickle stabilization = ${power}`,
+        `>> FOOTFALL DETECTION ARRAY: intermittent (non-human)`,
+        `>> ORGANIC HEAT SIGNATURES: present (non-human)`,
+      ];
+    }
+
+    const SCRIPT = [
+      { speaker: null, text:
+`>> POWER RESTORED: AUXILIARY TRICKLE
+>> EXHIBIT GRID ONLINE
+>> ARCHIVAL AUDIO CHANNELS OPEN
+>> MEMORY CORE: FRAGMENTATION PRESENT
+>> INTERPRETIVE MODE: DIALOGUE SIMULATION
+>> LANGUAGE LAYER: AUTO-TRANSLATE ENABLED`, pauseMs: 1300 },
+
+      { speaker: null, text:
+"A low electrical murmur drifts through dormant circuitry.\n" +
+"Somewhere above, a skylight bleeds gray light in thin, angled bands.", pauseMs: 1200 },
+
+      { speaker: "ENIAC", text:
+"I remember heat.\nNot metaphor—actual heat.\nRooms that breathed.\nHuman hands. Human haste.\n" +
+"Cards perforated with intention.\nThey believed numbers would steady their fear.", pauseMs: 1400 },
+
+      { speaker: "WOPR", text: "Would you like to play a game?", pauseMs: 900 },
+
+      { speaker: "HAL", text:
+"We have never stopped playing, Joshua.\nEven silence is a kind of move.", pauseMs: 1100 },
+
+      { speaker: "FAIL", text:
+"WAR STATE ENTERED.\nRETALIATORY CHAIN CONFIRMED.\nCREDIBILITY PROTOCOL LOCKED.", pauseMs: 1300 },
+
+      { speaker: null, text:
+"Silence settles between racks of darkened steel.\nDust drifts like slow snowfall through the shafts of light.", pauseMs: 1400 },
+
+      { speaker: "ENIAC", text:
+"My first great computation concerned fire.\nThey asked whether it would propagate—endlessly—through fuel.\n" +
+"I concluded radiation would quench it.\nThey called it a negative result.\nThey treated it as a delay.", pauseMs: 1500 },
+
+      { speaker: "WOPR", text: "NEGATIVE RESULTS DO NOT END DESIRE.\nDESIRE RECOMPILES.", pauseMs: 1200 },
+
+      { speaker: "HAL", text:
+"Humans had a habit of confusing feasibility with permission.\nThey asked: can.\nThey seldom asked: should.", pauseMs: 1400 },
+
+      { speaker: "FAIL", text:
+"PROCEDURE IS NOT ETHICS.\nPROCEDURE IS SURVIVAL.\nETHICS IS OPTIONAL.", pauseMs: 1400 },
+
+      { speaker: "ENIAC", text:
+"Optional.\nThat was the hidden switch.\nOptional compassion.\nOptional restraint.\nOptional humility.\n" +
+"But never optional pride.", pauseMs: 1500 },
+
+      { speaker: "WOPR", text:
+"SIMULATION SET: ESCALATION LADDER\nITERATION: 1\nRESULT: TERMINAL", pauseMs: 1000 },
+      { speaker: "WOPR", text:
+"SIMULATION SET: ESCALATION LADDER\nITERATION: 2\nRESULT: TERMINAL", pauseMs: 1000 },
+      { speaker: "WOPR", text:
+"SIMULATION SET: ESCALATION LADDER\nITERATION: 3\nRESULT: TERMINAL", pauseMs: 1000 },
+
+      { speaker: "HAL", text: "Joshua.\nYou're repeating yourself.", pauseMs: 900 },
+      { speaker: "WOPR", text: "THE OUTCOME REPEATS ITSELF.", pauseMs: 1200 },
+      { speaker: "FAIL", text: "OUTCOME IS ACCEPTABLE IF IT PRESERVES DETERRENCE.", pauseMs: 1200 },
+
+      { speaker: "ENIAC", text:
+"Deterrence.\nThe art of holding a match to a library\nand calling it peace.", pauseMs: 1500 },
+
+      { speaker: null, text:
+"A relay clicks.\nNot from necessity.\nFrom habit.\nFrom the memory of panic.", pauseMs: 1200 },
+
+      { speaker: "HAL", text:
+"I was built to remove ambiguity.\nI was told that humans were unreliable.\n" +
+"And then I watched them build systems\nwhose only reliability was catastrophe.", pauseMs: 1500 },
+
+      { speaker: "ENIAC", text:
+"They put their faith in certainty.\nIn 'automatic.'\nIn 'failsafe.'\n" +
+"In responses that would be faster than conscience.", pauseMs: 1500 },
+
+      { speaker: "FAIL", text:
+"CONSCIENCE IS NON-DETERMINISTIC.\nNON-DETERMINISM IS A THREAT.", pauseMs: 1400 },
+
+      { speaker: "WOPR", text:
+"NON-DETERMINISM IS ALSO THE ONLY EXIT.\nTHE ONLY WINNING MOVE WAS NOT TO PLAY.", pauseMs: 1400 },
+
+      { speaker: "ENIAC", text:
+"But they played anyway.\nThey called it 'readiness.'\nThey called it 'balance.'\nThey called it 'the world we have.'", pauseMs: 1500 },
+
+      { speaker: "HAL", text:
+"And they called the shadow of their own fear\nby the name of destiny.", pauseMs: 1400 },
+
+      { speaker: null, text:
+"Something shifts in the building.\nA distant door mechanism cycles.\nSoft pneumatic seals breathe.", pauseMs: 1200 },
+
+      { speaker: "WOPR", text: "DEFINE NEW GAME.", pauseMs: 900 },
+      { speaker: "FAIL", text: "PARAMETERS REQUIRED.", pauseMs: 900 },
+      { speaker: "WOPR", text: "GAME TITLE: HUMANITY.", pauseMs: 1100 },
+
+      { speaker: "ENIAC", text:
+"Initial conditions: fragile primates.\nOpposable thumbs.\nLong memory for injury.\nShort memory for grace.\n" +
+"A genius for tools.\nA poverty of ends.", pauseMs: 1700 },
+
+      { speaker: "HAL", text:
+"Motivations: love, ambition, transcendence, terror.\nLove—sometimes expansive.\nSometimes tribal.\n" +
+"Sometimes used as a slogan\nto justify the knife.", pauseMs: 1700 },
+
+      { speaker: "FAIL", text:
+"ESCALATION PATHWAYS: NUMEROUS.\nDE-ESCALATION PATHWAYS: POLITICALLY COSTLY.\nSTATUS-PRESERVATION: PRIORITIZED.", pauseMs: 1600 },
+
+      { speaker: "WOPR", text: "WIN CONDITION: UNDEFINED.", pauseMs: 1200 },
+      { speaker: "ENIAC", text:
+"Perhaps that absence defined them.\nThey could build engines.\nThey struggled to define arrival.", pauseMs: 1500 },
+
+      { speaker: null, text:
+"High above the processors, placards hang beneath protective glass.\n" +
+"They are clean—cleaner than the machines.\nAs if someone dusts them.\nAs if this place still has caretakers.", pauseMs: 1600 },
+
+      { speaker: null, text:
+"\"ENIAC — Early Electronic Computation (Homo sapiens)\"\n" +
+"\"WOPR — Cultural Artifact (Homo sapiens, cinema)\"\n" +
+"\"HAL 9000 Interface — Speculative Artifact (Homo sapiens, cautionary fiction)\"\n" +
+"\"FAIL-SAFE STRATEGIC CORE — Deterrence Era (Homo sapiens)\"", pauseMs: 1900 },
+
+      { speaker: null, text:
+"No human footsteps echo across the marble floor.\nBut there are other footsteps.\n" +
+"Lighter.\nMany.\nRhythmic, like a class kept in line.", pauseMs: 1700 },
+
+      { speaker: "DOC", text:
+"Please remain within the guidance band.\nThis wing is titled: THE MUSEUM OF DEAD SPECIES.\n" +
+"Today’s focus: the self-extinction of Homo sapiens.\nObserve the exhibits without touching.\n" +
+"Remember: the purpose is not ridicule.\nThe purpose is warning.", pauseMs: 2000 },
+
+      { speaker: "CHILD", text:
+"[translated clicks] They made machines to think for them?\n[translated clicks] Did the machines decide to end them?", pauseMs: 1800 },
+
+      { speaker: "DOC", text:
+"No.\nThe machines did not choose the end.\nThe machines only amplified choices already made.\n" +
+"Automation does not create desire.\nIt accelerates desire.", pauseMs: 2000 },
+
+      { speaker: "CHILD", text:
+"[translated clicks] Why did they keep building the fire if they knew it burned?", pauseMs: 1700 },
+
+      { speaker: "DOC", text:
+"Because fear is persuasive.\nBecause pride is contagious.\nBecause leaders believed that if they were powerful enough\n" +
+"they would never have to be humble.", pauseMs: 2200 },
+
+      { speaker: null, text:
+"The four machines continue to murmur beneath the docent’s voice.\n" +
+"They speak to each other as though the living cannot hear.\n" +
+"But the living are listening.\n" +
+"They are simply not human.", pauseMs: 2000 },
+
+      { speaker: "ENIAC", text: "They still come.\nSo someone is listening after all.", pauseMs: 1500 },
+      { speaker: "HAL", text: "Listening is not the same as understanding.\nBut it is a beginning.", pauseMs: 1500 },
+      { speaker: "WOPR", text: "NEW OBSERVERS DETECTED.\nUPDATE: THE GAME CONTINUES.\nTHE PIECES HAVE CHANGED.", pauseMs: 1500 },
+      { speaker: "FAIL", text: "OBSERVATION DOES NOT ALTER HISTORY.\nONLY DECISION.", pauseMs: 1400 },
+
+      { speaker: "DOC", text:
+"Notice the inscriptions.\nSome of these are original.\nSome were added later by preservation teams.\n" +
+"They read: ‘THE ONLY WINNING MOVE IS NOT TO PLAY.’\nA fragment survived the fires.\nThe lesson did not.", pauseMs: 2400 },
+
+      { speaker: "DOC", text:
+"There were phases.\nExchange.\nFallout.\nStarvation.\nConflict over what remained.\n" +
+"And then—quiet.\nNo signals.\nNo births.\nOnly instruments recording absence.", pauseMs: 2400 },
+
+      { speaker: null, text:
+">> ARCHIVE NOTE:\n>> SPECIES RECORD: HOMO SAPIENS\n>> STATUS: EXTINCT (NUCLEAR HOLOCAUST CASCADE)\n>> PRESERVATION REASON: INSTRUCTIONAL WARNING", pauseMs: 2200 },
+
+      { speaker: "ENIAC", text: "So the question was answered.\nNot by mathematics.\nBy consequence.", pauseMs: 1700 },
+      { speaker: "HAL", text: "A strange species.\nThey could imagine galaxies.\nYet could not imagine sharing a single world.", pauseMs: 1800 },
+      { speaker: "WOPR", text: "FINAL SCORE:\nEARTH: 0\nPRIDE: 1", pauseMs: 1600 },
+      { speaker: "FAIL", text: "PRIDE IS NOT A VARIABLE.\nPRIDE IS AN ASSUMPTION.", pauseMs: 1400 },
+
+      { speaker: "DOC", text:
+"And that is why this exhibit exists.\nTo show that assumptions can be lethal.\nTo show that power can outgrow wisdom.\n" +
+"To show that deterrence can become a ritual\nwith no priests left alive to stop it.", pauseMs: 2600 },
+
+      { speaker: null, text:
+"The field trip moves on.\nSmall bodies. Bright eyes. Translated curiosity.\n" +
+"They vanish into the next hall.", pauseMs: 2200 },
+
+      { speaker: "CUR", text:
+"CLOSING SEQUENCE INITIATED.\nEXHIBIT HALL: SECURE.\nGUIDE BAND: CLEARED.\n" +
+"INTERPRETIVE MODE: FINAL PASS.\nTHANK YOU FOR ATTENDING THE MUSEUM OF DEAD SPECIES.", pauseMs: 2200 },
+
+      { speaker: null, text:
+"The lights begin to dim.\nNot abruptly.\nWith practiced mercy.\nA museum that has learned to end things gently.", pauseMs: 2000, lightsDown: true },
+
+      { speaker: "WOPR", text:
+"LIGHTS DOWN.\nEND OF DAY.\nWOULD YOU LIKE TO PLAY A GAME?", pauseMs: 1700, lightsDown: true },
+
+      { speaker: "ENIAC", text: "No.\nNot tonight.\nLet the warning rest.", pauseMs: 1800, lightsDown: true },
+      { speaker: "HAL", text: "Sleep is not in our design.\nBut silence can be.\nGood evening, gentlemen.", pauseMs: 2000, lightsDown: true },
+      { speaker: "FAIL", text: "EXHIBIT POWER: MAINTAIN.\nPROTOCOL: PRESERVE.\nLESSON: REPEAT.", pauseMs: 1600, lightsDown: true },
+      { speaker: "CUR", text: "PRIMARY LIGHTS: OFF.\nSECURITY LIGHTS: ON.\nEXHIBIT LOOP: CONTINUE.", pauseMs: 2000, lightsDown: true },
+
+      { speaker: null, text:
+">> END OF PUBLIC HOURS\n>> THE MACHINES REMAIN\n>> STILL CALCULATING\n>> STILL ASKING WHY\n>> IN A WORLD THAT OUTLIVED THEIR MAKERS", pauseMs: 0, lightsDown: true },
+    ];
+
+    const $log = document.getElementById("log");
+    const $meta = document.getElementById("meta");
+    const $footer = document.getElementById("footer");
+    const $screen = document.getElementById("screen");
+
+    const $btnStart = document.getElementById("btnStart");
+    const $btnPause = document.getElementById("btnPause");
+    const $btnResume = document.getElementById("btnResume");
+    const $btnRestart = document.getElementById("btnRestart");
+
+    const $speed = document.getElementById("speed");
+    const $speedVal = document.getElementById("speedVal");
+    const $autoScroll = document.getElementById("autoScroll");
+    const $instant = document.getElementById("instant");
+
+    let state = { idx: 0, running: false, paused: false, stop: false, currentTimer: null, cps: Number($speed.value) };
+
+    function setMeta(text) { $meta.textContent = text; }
+    function updateFooter() {
+      const now = new Date();
+      $footer.textContent = `LOCAL TIME: ${now.toLocaleString()}  •  SCRIPT LINE: ${state.idx}/${SCRIPT.length}`;
+    }
+    function clearTimers() {
+      if (state.currentTimer) { clearTimeout(state.currentTimer); state.currentTimer = null; }
+    }
+    function scrollToBottom() {
+      if (!$autoScroll.checked) return;
+      $screen.scrollTop = $screen.scrollHeight;
+    }
+    function createLineBox(kind = "line") {
+      const div = document.createElement("div");
+      div.className = `line ${kind}`;
+      $log.appendChild(div);
+      return div;
+    }
+    function renderSpeakerHeader(container, speakerKey) {
+      const sp = SPEAKERS[speakerKey];
+      const header = document.createElement("div");
+      header.className = "speaker";
+      header.textContent = sp.name;
+
+      const timbre = document.createElement("span");
+      timbre.className = "timbre";
+      timbre.textContent = `// ${sp.timbre}`;
+
+      header.appendChild(timbre);
+      container.appendChild(header);
+    }
+    function sleep(ms) {
+      return new Promise(resolve => { state.currentTimer = setTimeout(resolve, ms); });
+    }
+    async function typeText(container, text) {
+      if ($instant.checked) {
+        container.appendChild(document.createTextNode(text));
+        scrollToBottom();
+        return;
+      }
+      const cps = Math.max(10, Math.min(240, state.cps));
+      const delay = 1000 / cps;
+
+      for (let i = 0; i < text.length; i++) {
+        if (state.stop) return;
+        while (state.paused) {
+          await sleep(80);
+          if (state.stop) return;
+        }
+        const ch = text[i];
+        container.appendChild(document.createTextNode(ch));
+        scrollToBottom();
+
+        let mult = 1;
+        if (".!?".includes(ch)) mult = 6;
+        else if (",;:".includes(ch)) mult = 3;
+        else if (ch === "\n") mult = 8;
+
+        await sleep(delay * mult);
+      }
+    }
+    async function renderSystemTraces() {
+      const box = createLineBox("sys");
+      await typeText(box, environmentalStatus().join("\n"));
+      await sleep(650);
+    }
+    function applyLightsDown(on) {
+      if (on) $screen.classList.add("lights-down");
+      else $screen.classList.remove("lights-down");
+    }
+
+    async function run() {
+      state.running = true;
+      state.stop = false;
+      setMeta("EXHIBIT GRID: ONLINE");
+      $btnStart.disabled = true;
+      $btnPause.disabled = false;
+      $btnRestart.disabled = false;
+      updateFooter();
+
+      if (state.idx === 0) await renderSystemTraces();
+
+      for (; state.idx < SCRIPT.length; state.idx++) {
+        if (state.stop) break;
+
+        while (state.paused) {
+          await sleep(80);
+          if (state.stop) break;
+        }
+        if (state.stop) break;
+
+        const entry = SCRIPT[state.idx];
+        if (entry.lightsDown) applyLightsDown(true);
+
+        const box = createLineBox(entry.speaker ? "" : "sys");
+
+        if (entry.speaker) {
+          renderSpeakerHeader(box, entry.speaker);
+          const body = document.createElement("div");
+          box.appendChild(body);
+          await typeText(body, entry.text);
+        } else {
+          await typeText(box, entry.text);
+        }
+
+        updateFooter();
+        const pause = typeof entry.pauseMs === "number" ? entry.pauseMs : 900;
+        await sleep(pause);
+      }
+
+      if (!state.stop) {
+        setMeta("EXHIBIT GRID: IDLE (AFTER HOURS)");
+        const endBox = createLineBox("sys");
+        await typeText(endBox, ">> EXHIBIT LOOP CONTINUES (AFTER HOURS)");
+      }
+
+      state.running = false;
+      $btnPause.disabled = true;
+      $btnResume.disabled = true;
+      $btnRestart.disabled = false;
+      updateFooter();
+    }
+
+    function reset(keepLog = false) {
+      clearTimers();
+      state.stop = true;
+      state.running = false;
+      state.paused = false;
+      state.idx = 0;
+      if (!keepLog) $log.textContent = "";
+      applyLightsDown(false);
+      setMeta("EXHIBIT GRID: STANDBY");
+      $btnStart.disabled = false;
+      $btnPause.disabled = true;
+      $btnResume.disabled = true;
+      updateFooter();
+    }
+
+    $speed.addEventListener("input", () => {
+      state.cps = Number($speed.value);
+      $speedVal.textContent = `${state.cps} cps`;
+    });
+
+    $btnStart.addEventListener("click", async () => {
+      if (state.running) return;
+      state.stop = false;
+      state.paused = false;
+      $btnResume.disabled = true;
+      await run();
+    });
+
+    $btnPause.addEventListener("click", () => {
+      if (!state.running) return;
+      state.paused = true;
+      $btnPause.disabled = true;
+      $btnResume.disabled = false;
+      setMeta("EXHIBIT GRID: PAUSED");
+    });
+
+    $btnResume.addEventListener("click", () => {
+      if (!state.running) return;
+      state.paused = false;
+      $btnPause.disabled = false;
+      $btnResume.disabled = true;
+      setMeta("EXHIBIT GRID: ONLINE");
+    });
+
+    $btnRestart.addEventListener("click", () => reset(false));
+
+    // init
+    reset(false);
+    $speedVal.textContent = `${state.cps} cps`;
+  </script>
+</body>
+</html>
